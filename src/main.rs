@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use macroquad::prelude::*;
+use macroquad::{prelude::*, ui::root_ui};
 
 #[derive(Clone, PartialEq)]
 pub struct Body {
@@ -44,15 +44,17 @@ async fn main() {
     ];
     let time_scale = 30.0;
     loop {
+        draw_bodies(&bodies);
+
+        if root_ui().button(vec2(10.0, 10.0), "Start".to_owned()) {
+            break;
+        }
+        next_frame().await;
+    }
+    loop {
         let dt = get_frame_time();
 
-        for c in bodies.clone().into_iter() {
-            draw_circle(c.pos.x, c.pos.y, c.mass, c.color);
-            for (i, pt) in c.trace.iter().enumerate() {
-                let step = 1.0 / N_TRACE as f32;
-                draw_circle(pt.x, pt.y, 1.0, c.color.with_alpha(step * i as f32));
-            }
-        }
+        draw_bodies(&bodies);
 
         let others = bodies.clone();
         for c in bodies.iter_mut() {
@@ -79,6 +81,16 @@ async fn main() {
         }
 
         next_frame().await
+    }
+}
+
+fn draw_bodies(bodies: &[Body]) {
+    for c in bodies.into_iter() {
+        draw_circle(c.pos.x, c.pos.y, c.mass, c.color);
+        for (i, pt) in c.trace.iter().enumerate() {
+            let step = 1.0 / N_TRACE as f32;
+            draw_circle(pt.x, pt.y, 1.0, c.color.with_alpha(step * i as f32));
+        }
     }
 }
 
