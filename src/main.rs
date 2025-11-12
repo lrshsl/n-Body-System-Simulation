@@ -20,23 +20,23 @@ async fn main() {
         pos: vec2(300.0, 100.0),
         mass: 2.0,
         color: GREEN,
-        vel: vec2(200.0, 0.0),
+        vel: vec2(150.0, 0.0),
         acc: Vec2::ZERO,
         trace: VecDeque::with_capacity(N_TRACE),
     };
     let c2 = Body {
-        pos: vec2(300.0, 400.0),
-        mass: 2.0,
+        pos: vec2(300.0, 250.0),
+        mass: 20.0,
         color: RED,
-        vel: vec2(-200.0, 0.0),
+        vel: vec2(0.0, 0.0),
         acc: Vec2::ZERO,
         trace: VecDeque::with_capacity(N_TRACE),
     };
     let c3 = Body {
-        pos: vec2(500.0, 400.0),
+        pos: vec2(300.0, 400.0),
         mass: 2.0,
         color: BLUE,
-        vel: vec2(-200.0, 0.0),
+        vel: vec2(-150.0, 0.0),
         acc: Vec2::ZERO,
         trace: VecDeque::with_capacity(N_TRACE),
     };
@@ -62,11 +62,12 @@ async fn main() {
             let m_red = masses.clone().product::<f32>() / masses.sum::<f32>();
 
             // Sum all forces
-            c.acc = Vec2::ZERO;
+            let mut f_tot = Vec2::ZERO;
             for other in others.iter() {
                 let f = (other.pos - c.pos) * m_red;
-                c.acc += f * dt * time_scale;
+                f_tot += f * dt * time_scale;
             }
+            c.acc = f_tot / c.mass;
 
             // Tail
             if c.trace.len() > N_TRACE {
