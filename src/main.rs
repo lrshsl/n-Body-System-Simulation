@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use macroquad::prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Body {
     pos: Vec2,
     mass: f32,
@@ -16,31 +16,32 @@ const N_TRACE: usize = 100;
 
 #[macroquad::main("TBP")]
 async fn main() {
-    let c1 = Body {
-        pos: vec2(300.0, 100.0),
-        mass: 2.0,
-        color: GREEN,
-        vel: vec2(150.0, 0.0),
-        acc: Vec2::ZERO,
-        trace: VecDeque::with_capacity(N_TRACE),
-    };
-    let c2 = Body {
-        pos: vec2(300.0, 250.0),
-        mass: 20.0,
-        color: RED,
-        vel: vec2(0.0, 0.0),
-        acc: Vec2::ZERO,
-        trace: VecDeque::with_capacity(N_TRACE),
-    };
-    let c3 = Body {
-        pos: vec2(300.0, 400.0),
-        mass: 2.0,
-        color: BLUE,
-        vel: vec2(-150.0, 0.0),
-        acc: Vec2::ZERO,
-        trace: VecDeque::with_capacity(N_TRACE),
-    };
-    let mut bodies = [c1, c2, c3];
+    let mut bodies = [
+        Body {
+            pos: vec2(300.0, 100.0),
+            mass: 5.0,
+            color: GREEN,
+            vel: vec2(150.0, 0.0),
+            acc: Vec2::ZERO,
+            trace: VecDeque::with_capacity(N_TRACE),
+        },
+        Body {
+            pos: vec2(300.0, 250.0),
+            mass: 20.0,
+            color: RED,
+            vel: vec2(0.0, 0.0),
+            acc: Vec2::ZERO,
+            trace: VecDeque::with_capacity(N_TRACE),
+        },
+        Body {
+            pos: vec2(300.0, 400.0),
+            mass: 5.0,
+            color: BLUE,
+            vel: vec2(-150.0, 0.0),
+            acc: Vec2::ZERO,
+            trace: VecDeque::with_capacity(N_TRACE),
+        },
+    ];
     let time_scale = 30.0;
     loop {
         let dt = get_frame_time();
@@ -62,11 +63,12 @@ async fn main() {
             let m_red = masses.clone().product::<f32>() / masses.sum::<f32>();
 
             // Sum all forces
-            let mut f_tot = Vec2::ZERO;
-            for other in others.iter() {
-                let f = (other.pos - c.pos) * m_red;
-                f_tot += f * dt * time_scale;
-            }
+            let f_tot = others
+                .iter()
+                .filter(|&other| other != c)
+                .map(|other| (other.pos - c.pos) * m_red) // F = (r2 - r1) m_red
+                .map(|f| f * dt * time_scale)
+                .sum::<Vec2>();
             c.acc = f_tot / c.mass;
 
             // Tail
