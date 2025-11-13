@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 macroquad = "0.4.14"
+
+# Always optimize dependencies (recommended for macroquad)
+[profile.dev.package.'*']
+opt-level = 3

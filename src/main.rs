@@ -1,5 +1,3 @@
-#![feature(f128)]
-
 use std::collections::VecDeque;
 
 use macroquad::{prelude::*, ui::root_ui};
@@ -19,12 +17,18 @@ pub struct MainState {
 }
 
 pub struct Settings {
+    gravitational_constant: f32,
     time_scale: f32,
     tail_length: usize,
     tail_delta_ms: f64,
 }
 
+const FORCE_ARROW_WIDTH: f32 = 3.0;
+const FORCE_ARROW_TIP_ANGLE: f32 = 30_f32.to_radians();
+const FORCE_ARROW_TIP_SIZE: f32 = 30.0;
+
 const DEFAULT_SETTINGS: Settings = Settings {
+    gravitational_constant: 1e1,
     time_scale: 1.0,
     tail_delta_ms: 1e-6,
     tail_length: 200,
@@ -67,6 +71,7 @@ async fn main() {
     // Tweak initial settings
     loop {
         draw_bodies(&bodies);
+        draw_velocities(&bodies);
 
         if root_ui().button(vec2(10.0, 10.0), "Start".to_owned()) {
             break;
@@ -102,7 +107,8 @@ fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings) {
             .sum::<Vec2>(); // F_tot = sum F_n
 
         // Update acceleration, velocity and position accordingly
-        c.acc = (f_tot / c.mass) * dt * settings.time_scale;
+        let acc = (f_tot / c.mass) * settings.gravitational_constant;
+        c.acc = acc * dt * settings.time_scale;
         c.vel += c.acc * dt;
         c.pos += c.vel * dt;
     }
@@ -123,6 +129,21 @@ fn update_tail(c: &mut Body, settings: &Settings) {
         c.trace.pop_front();
     }
     c.trace.push_back(c.pos);
+}
+
+fn draw_velocities(bodies: &[Body]) {
+    for Body {
+        pos, vel, color, ..
+    } in bodies.into_iter()
+    {
+        let end = *pos + *vel;
+        draw_line(pos.x, pos.y, end.x, end.y, FORCE_ARROW_WIDTH, *color);
+        for angle_dev in [1.0, -1.0] {
+            let a = vel.to_angle() + FORCE_ARROW_TIP_ANGLE * angle_dev;
+            let pt = end + FORCE_ARROW_TIP_SIZE * vec2(-a.cos(), -a.sin());
+            draw_line(end.x, end.y, pt.x, pt.y, FORCE_ARROW_WIDTH, *color);
+        }
+    }
 }
 
 fn draw_bodies(bodies: &[Body]) {
