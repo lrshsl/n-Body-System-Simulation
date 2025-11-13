@@ -20,14 +20,14 @@ pub fn draw_arrow(
     direction: Vec2,
     color: Color,
     width: f32,
-    tip_size: f32,
+    tip_size_rel: f32,
     tip_angle: f32,
 ) {
     let end = origin + direction;
     draw_line(origin.x, origin.y, end.x, end.y, width, color);
     for angle_dev in [1.0, -1.0] {
         let a = direction.to_angle() + tip_angle * angle_dev;
-        let pt = end + tip_size * vec2(-a.cos(), -a.sin());
+        let pt = end + tip_size_rel * direction.length() * vec2(-a.cos(), -a.sin());
         draw_line(end.x, end.y, pt.x, pt.y, width, color);
     }
 }

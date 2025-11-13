@@ -2,7 +2,7 @@ use macroquad::shapes::draw_circle;
 
 use crate::{
     body::Body,
-    consts::{FORCE_ARROW_TIP_ANGLE, FORCE_ARROW_TIP_SIZE, FORCE_ARROW_WIDTH},
+    consts::{FORCE_ARROW_TIP_ANGLE, FORCE_ARROW_TIP_SIZE_REL, FORCE_ARROW_WIDTH},
     draw_primitives::arrow::draw_arrows,
     get_forces,
     settings::Settings,
@@ -12,7 +12,7 @@ pub fn draw_velocities(bodies: &[Body]) {
     draw_arrows(
         bodies.iter().map(|b| (b.pos, b.vel, b.color)),
         FORCE_ARROW_WIDTH,
-        FORCE_ARROW_TIP_SIZE,
+        FORCE_ARROW_TIP_SIZE_REL,
         FORCE_ARROW_TIP_ANGLE,
     );
 }
@@ -29,7 +29,7 @@ where
                 .zip(other_colors) // Use colors from the target
                 .map(|(f, c)| (b.pos, f / b.mass * settings.gravitational_constant, c)),
             1.0,
-            FORCE_ARROW_TIP_SIZE,
+            FORCE_ARROW_TIP_SIZE_REL,
             FORCE_ARROW_TIP_ANGLE,
         );
     }
