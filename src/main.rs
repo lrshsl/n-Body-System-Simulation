@@ -1,4 +1,5 @@
 #![feature(generic_const_exprs)]
+#![feature(anonymous_lifetime_in_impl_trait)]
 
 use std::collections::VecDeque;
 
@@ -73,6 +74,7 @@ async fn main() {
     // Tweak initial settings
     loop {
         draw_bodies(&bodies);
+        draw_forces(&bodies);
         draw_velocities(&bodies);
 
         if root_ui().button(vec2(10.0, 10.0), "Start".to_owned()) {
@@ -93,26 +95,44 @@ async fn main() {
 }
 
 fn draw_velocities(bodies: &[Body]) {
-    draw_arrows(bodies.iter().map(|b| (b.pos, b.vel, b.color)));
+    draw_arrows(
+        bodies.iter().map(|b| (b.pos, b.vel, b.color)),
+        FORCE_ARROW_WIDTH,
+    );
 }
 
-fn draw_forces(bodies: &[Body]) {
-    draw_arrows(bodies.iter().map(|b| (b.pos, b.vel, b.color)));
+fn draw_forces<const N: usize>(bodies: &[Body; N])
+where
+    [(); N - 1]:,
+{
+    let mass_reduced = get_mass_reduced(bodies.iter());
+    for b in bodies.iter() {
+        let other_colors = bodies.iter().filter(|&o| o != b).map(|o| o.color);
+        draw_arrows(
+            get_forces(b, bodies, mass_reduced)
+                .into_iter()
+                .zip(other_colors) // Use colors from the target
+                .map(|(f, c)| (b.pos, f * 1e-2, c)),
+            1.0,
+        );
+    }
 }
 
 fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N], m_red: f32) -> [Vec2; N - 1] {
     let mut all_forces = [Vec2::new(0.0, 0.0); N - 1];
     let bodies = bodies.iter();
 
-    for (i, f) in bodies
-        .filter(|&other| other != body)
-        .map(|other| (other.pos - body.pos) * m_red)
-        .enumerate()
-    // F_n = (r_n - r_1) m_red
-    {
-        all_forces[i] = f
+    for (i, other) in bodies.filter(|&b| b != body).enumerate() {
+        // F_n = (r_n - r_1) m_red
+        all_forces[i] = (other.pos - body.pos) * m_red
     }
     all_forces
+}
+
+fn get_mass_reduced(bodies: impl Iterator<Item = &Body> + Clone) -> f32 {
+    // Reduced mass
+    let masses = bodies.clone().map(|x| x.mass);
+    masses.clone().product::<f32>() / masses.sum::<f32>() // m_red = (m_1 m_2 .. m_n) / (m_1 + m_2 + .. + m_n)
 }
 
 fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings)
@@ -122,10 +142,7 @@ where
     let dt = get_frame_time();
 
     let bodies_iter = bodies.iter();
-
-    // Reduced mass
-    let masses = bodies_iter.clone().map(|x| x.mass);
-    let m_red = masses.clone().product::<f32>() / masses.sum::<f32>();
+    let m_red = get_mass_reduced(bodies_iter.clone());
 
     // Sum up all forces per body
     let mut forces = [Vec2::ZERO; N];
@@ -164,14 +181,14 @@ fn update_tail(c: &mut Body, settings: &Settings) {
     c.trace.push_back(c.pos);
 }
 
-fn draw_arrows(data: impl IntoIterator<Item = (Vec2, Vec2, Color)>) {
+fn draw_arrows(data: impl IntoIterator<Item = (Vec2, Vec2, Color)>, width: f32) {
     for (pos, vel, color) in data.into_iter() {
         let end = pos + vel;
-        draw_line(pos.x, pos.y, end.x, end.y, FORCE_ARROW_WIDTH, color);
+        draw_line(pos.x, pos.y, end.x, end.y, width, color);
         for angle_dev in [1.0, -1.0] {
             let a = vel.to_angle() + FORCE_ARROW_TIP_ANGLE * angle_dev;
             let pt = end + FORCE_ARROW_TIP_SIZE * vec2(-a.cos(), -a.sin());
-            draw_line(end.x, end.y, pt.x, pt.y, FORCE_ARROW_WIDTH, color);
+            draw_line(end.x, end.y, pt.x, pt.y, width, color);
         }
     }
 }
