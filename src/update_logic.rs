@@ -17,7 +17,7 @@ where
     let mut forces = [Vec2::ZERO; N];
     for (cur_i, cur_b) in bodies_iter.enumerate() {
         // Sum all forces
-        let f_tot = get_forces(&cur_b, &bodies).iter().sum::<Vec2>(); // F_tot = sum F_n
+        let f_tot = get_forces(cur_b, bodies).iter().sum::<Vec2>(); // F_tot = sum F_n
         forces[cur_i] = f_tot;
     }
 
@@ -37,7 +37,7 @@ pub fn update_tails(bodies: &mut [Body], settings: &Settings, state: &mut MainSt
     // Tail
     if get_time() >= state.next_tail_update {
         for c in bodies.iter_mut() {
-            update_tail(c, &settings);
+            update_tail(c, settings);
             state.next_tail_update = get_time() + settings.tail_delta_ms;
         }
     }

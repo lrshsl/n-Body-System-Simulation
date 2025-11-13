@@ -1,7 +1,6 @@
 #![feature(generic_const_exprs)]
 #![feature(anonymous_lifetime_in_impl_trait)]
-
-use std::collections::VecDeque;
+#![allow(incomplete_features)]
 
 use macroquad::{prelude::*, ui::root_ui};
 
@@ -11,7 +10,6 @@ use consts::DEFAULT_SETTINGS;
 use crate::{
     draw_functions::{draw_bodies, draw_forces, draw_velocities},
     main_state::MainState,
-    settings::Settings,
     update_logic::{update_bodies, update_tails},
 };
 

@@ -36,7 +36,7 @@ where
 }
 
 pub fn draw_bodies(bodies: &[Body]) {
-    for c in bodies.into_iter() {
+    for c in bodies.iter() {
         let step = 1.0 / c.trace.len() as f32;
 
         draw_circle(c.pos.x, c.pos.y, c.mass, c.color);
