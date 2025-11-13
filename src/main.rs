@@ -1,3 +1,5 @@
+#![feature(generic_const_exprs)]
+
 use std::collections::VecDeque;
 
 use macroquad::{prelude::*, ui::root_ui};
@@ -90,27 +92,58 @@ async fn main() {
     }
 }
 
-fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings) {
+fn draw_velocities(bodies: &[Body]) {
+    draw_arrows(bodies.iter().map(|b| (b.pos, b.vel, b.color)));
+}
+
+fn draw_forces(bodies: &[Body]) {
+    draw_arrows(bodies.iter().map(|b| (b.pos, b.vel, b.color)));
+}
+
+fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N], m_red: f32) -> [Vec2; N - 1] {
+    let mut all_forces = [Vec2::new(0.0, 0.0); N - 1];
+    let bodies = bodies.iter();
+
+    for (i, f) in bodies
+        .filter(|&other| other != body)
+        .map(|other| (other.pos - body.pos) * m_red)
+        .enumerate()
+    // F_n = (r_n - r_1) m_red
+    {
+        all_forces[i] = f
+    }
+    all_forces
+}
+
+fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings)
+where
+    [(); N - 1]:,
+{
     let dt = get_frame_time();
 
-    let others = bodies.clone();
-    for c in bodies.iter_mut() {
-        // Reduced mass
-        let masses = others.iter().cloned().map(|x| x.mass);
-        let m_red = masses.clone().product::<f32>() / masses.sum::<f32>();
+    let bodies_iter = bodies.iter();
 
+    // Reduced mass
+    let masses = bodies_iter.clone().map(|x| x.mass);
+    let m_red = masses.clone().product::<f32>() / masses.sum::<f32>();
+
+    // Sum up all forces per body
+    let mut forces = [Vec2::ZERO; N];
+    for (cur_i, cur_b) in bodies_iter.enumerate() {
         // Sum all forces
-        let f_tot = others
-            .iter()
-            .filter(|&other| other != c)
-            .map(|other| (other.pos - c.pos) * m_red) // F_n = (r_n - r_1) m_red
-            .sum::<Vec2>(); // F_tot = sum F_n
+        let f_tot = get_forces(&cur_b, &bodies, m_red).iter().sum::<Vec2>(); // F_tot = sum F_n
+        forces[cur_i] = f_tot;
+    }
+
+    // Apply F_tot to each body
+    for (b, f_tot) in bodies.iter_mut().zip(forces) {
+        // Calculate effect on acceleration
+        let acc = (f_tot / b.mass) * settings.gravitational_constant;
 
         // Update acceleration, velocity and position accordingly
-        let acc = (f_tot / c.mass) * settings.gravitational_constant;
-        c.acc = acc * dt * settings.time_scale;
-        c.vel += c.acc * dt;
-        c.pos += c.vel * dt;
+        b.acc = acc * dt * settings.time_scale;
+        b.vel += b.acc * dt;
+        b.pos += b.vel * dt;
     }
 }
 
@@ -131,17 +164,14 @@ fn update_tail(c: &mut Body, settings: &Settings) {
     c.trace.push_back(c.pos);
 }
 
-fn draw_velocities(bodies: &[Body]) {
-    for Body {
-        pos, vel, color, ..
-    } in bodies.into_iter()
-    {
-        let end = *pos + *vel;
-        draw_line(pos.x, pos.y, end.x, end.y, FORCE_ARROW_WIDTH, *color);
+fn draw_arrows(data: impl IntoIterator<Item = (Vec2, Vec2, Color)>) {
+    for (pos, vel, color) in data.into_iter() {
+        let end = pos + vel;
+        draw_line(pos.x, pos.y, end.x, end.y, FORCE_ARROW_WIDTH, color);
         for angle_dev in [1.0, -1.0] {
             let a = vel.to_angle() + FORCE_ARROW_TIP_ANGLE * angle_dev;
             let pt = end + FORCE_ARROW_TIP_SIZE * vec2(-a.cos(), -a.sin());
-            draw_line(end.x, end.y, pt.x, pt.y, FORCE_ARROW_WIDTH, *color);
+            draw_line(end.x, end.y, pt.x, pt.y, FORCE_ARROW_WIDTH, color);
         }
     }
 }
