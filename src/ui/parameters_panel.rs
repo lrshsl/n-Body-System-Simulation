@@ -8,7 +8,11 @@ use macroquad::{
 use crate::{
     main_state::MainState,
     settings::Settings,
-    ui::button::{ButtonDrawOptions, button},
+    ui::{
+        SliderDrawOptions,
+        button::{ButtonDrawOptions, button},
+        slider,
+    },
 };
 
 pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {
@@ -67,4 +71,13 @@ pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {
     ) {
         state.show_force_magnitude = !state.show_force_magnitude;
     }
+
+    settings.tail_delta_ms = slider(
+        "Tail Size",
+        topleft + margin + one_button_height,
+        settings.tail_delta_ms as f32,
+        0.0,
+        0.1,
+        SliderDrawOptions::default(),
+    ) as f64;
 }

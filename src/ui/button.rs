@@ -3,8 +3,10 @@ use macroquad::{
     input::{is_mouse_button_pressed, mouse_position},
     math::{Rect, Vec2, vec2},
     shapes::{draw_rectangle, draw_rectangle_lines},
-    text::{TextParams, draw_text_ex, get_text_center},
+    text::TextParams,
 };
+
+use crate::ui::draw_text_center;
 
 #[derive(Clone, Copy)]
 pub struct ButtonDrawOptions {
@@ -63,19 +65,7 @@ pub fn button(text: &'static str, topleft: Vec2, opts: ButtonDrawOptions) -> boo
         color: opts.text_color,
         ..Default::default()
     };
-    let center = get_text_center(
-        text,
-        params.font,
-        params.font_size,
-        params.font_scale,
-        params.rotation,
-    );
-    draw_text_ex(
-        text,
-        topleft.x + opts.size.x * 0.5 - center.x,
-        topleft.y + opts.size.y * 0.5 - center.y,
-        params,
-    );
+    draw_text_center(text, topleft + opts.size * 0.5, params);
 
     // Check for click event in this area
     let rect = Rect::new(topleft.x, topleft.y, opts.size.x, opts.size.y);

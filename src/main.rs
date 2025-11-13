@@ -2,7 +2,7 @@
 #![feature(anonymous_lifetime_in_impl_trait)]
 #![allow(incomplete_features)]
 
-use macroquad::{miniquad::window::screen_size, prelude::*};
+use macroquad::prelude::*;
 
 use body::Body;
 use consts::DEFAULT_SETTINGS;
