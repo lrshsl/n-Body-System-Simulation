@@ -11,6 +11,7 @@ use consts::DEFAULT_SETTINGS;
 use crate::{
     draw_functions::{draw_bodies, draw_forces, draw_velocities},
     main_state::MainState,
+    settings::Settings,
     update_logic::{update_bodies, update_tails},
 };
 
@@ -35,7 +36,7 @@ async fn main() {
     // Tweak initial settings
     loop {
         draw_bodies(&bodies);
-        draw_forces(&bodies);
+        draw_forces(&bodies, &settings);
         draw_velocities(&bodies);
 
         if root_ui().button(vec2(10.0, 10.0), "Start".to_owned()) {
@@ -52,22 +53,19 @@ async fn main() {
 
         draw_bodies(&bodies);
         if state.show_forces {
-            draw_forces(&bodies);
+            draw_forces(&bodies, &settings);
         }
 
         next_frame().await
     }
 }
 
-fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N], m_red: f32) -> [Vec2; N - 1] {
+fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N]) -> [Vec2; N - 1] {
     let mut all_forces = [Vec2::new(0.0, 0.0); N - 1];
     let bodies = bodies.iter();
 
     for (i, other) in bodies.filter(|&b| b != body).enumerate() {
         // F_(1, 2) = - G [ (m_1 m_2) / |r_1 - r_2|^3 ] (r_1 - r_2)
-        //
-        // G is taken care of later, this loop only calculates the forces depending on
-        // the particular bodies that interact
         //
         let (m_1, m_2) = (body.mass, other.mass);
         let (r_1, r_2) = (body.pos, other.pos);
@@ -76,10 +74,4 @@ fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N], m_red: f32) -> [V
         all_forces[i] = -m_1 * m_2 / d.powi(3) * r_21;
     }
     all_forces
-}
-
-fn get_mass_reduced(bodies: impl Iterator<Item = &Body> + Clone) -> f32 {
-    // Reduced mass
-    let masses = bodies.clone().map(|x| x.mass);
-    masses.clone().product::<f32>() / masses.sum::<f32>() // m_red = (m_1 m_2 .. m_n) / (m_1 + m_2 + .. + m_n)
 }

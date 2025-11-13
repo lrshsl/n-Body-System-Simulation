@@ -3,7 +3,7 @@ use macroquad::{
     time::{get_frame_time, get_time},
 };
 
-use crate::{Body, get_forces, get_mass_reduced, main_state::MainState, settings::Settings};
+use crate::{Body, get_forces, main_state::MainState, settings::Settings};
 
 pub fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings)
 where
@@ -12,13 +12,12 @@ where
     let dt = get_frame_time();
 
     let bodies_iter = bodies.iter();
-    let m_red = get_mass_reduced(bodies_iter.clone());
 
     // Sum up all forces per body
     let mut forces = [Vec2::ZERO; N];
     for (cur_i, cur_b) in bodies_iter.enumerate() {
         // Sum all forces
-        let f_tot = get_forces(&cur_b, &bodies, m_red).iter().sum::<Vec2>(); // F_tot = sum F_n
+        let f_tot = get_forces(&cur_b, &bodies).iter().sum::<Vec2>(); // F_tot = sum F_n
         forces[cur_i] = f_tot;
     }
 

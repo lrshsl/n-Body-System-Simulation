@@ -4,7 +4,8 @@ use crate::{
     body::Body,
     consts::{FORCE_ARROW_TIP_ANGLE, FORCE_ARROW_TIP_SIZE, FORCE_ARROW_WIDTH},
     draw_primitives::arrow::draw_arrows,
-    get_forces, get_mass_reduced,
+    get_forces,
+    settings::Settings,
 };
 
 pub fn draw_velocities(bodies: &[Body]) {
@@ -16,18 +17,17 @@ pub fn draw_velocities(bodies: &[Body]) {
     );
 }
 
-pub fn draw_forces<const N: usize>(bodies: &[Body; N])
+pub fn draw_forces<const N: usize>(bodies: &[Body; N], settings: &Settings)
 where
     [(); N - 1]:,
 {
-    let mass_reduced = get_mass_reduced(bodies.iter());
     for b in bodies.iter() {
         let other_colors = bodies.iter().filter(|&o| o != b).map(|o| o.color);
         draw_arrows(
-            get_forces(b, bodies, mass_reduced)
+            get_forces(b, bodies)
                 .into_iter()
                 .zip(other_colors) // Use colors from the target
-                .map(|(f, c)| (b.pos, f * 1e-2, c)),
+                .map(|(f, c)| (b.pos, f / b.mass * settings.gravitational_constant, c)),
             1.0,
             FORCE_ARROW_TIP_SIZE,
             FORCE_ARROW_TIP_ANGLE,
