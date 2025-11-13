@@ -9,7 +9,7 @@ use body::Body;
 use consts::DEFAULT_SETTINGS;
 
 use crate::{
-    draw_functions::{draw_forces, draw_velocities},
+    draw_functions::{draw_bodies, draw_forces, draw_velocities},
     main_state::MainState,
     update_logic::{update_bodies, update_tails},
 };
@@ -19,38 +19,13 @@ mod consts;
 mod draw_functions;
 mod draw_primitives;
 mod main_state;
+mod presets;
 mod settings;
 mod update_logic;
 
 #[macroquad::main("n-Body-Problem Simulation")]
 async fn main() {
-    let mut bodies = [
-        Body {
-            pos: vec2(800.0, 100.0),
-            mass: 5.0,
-            color: GREEN,
-            vel: vec2(150.0, 0.0),
-            acc: Vec2::ZERO,
-            trace: VecDeque::with_capacity(DEFAULT_SETTINGS.tail_length),
-        },
-        Body {
-            pos: vec2(1600.0, 800.0),
-            mass: 5.0 * 5.0,
-            color: RED,
-            vel: vec2(-150.0 / 5.0, 100.0 / 5.0),
-            acc: Vec2::ZERO,
-            trace: VecDeque::with_capacity(DEFAULT_SETTINGS.tail_length),
-        },
-        Body {
-            pos: vec2(300.0, 1550.0),
-            mass: 5.0,
-            color: BLUE,
-            vel: vec2(0.0, -100.0),
-            acc: Vec2::ZERO,
-            trace: VecDeque::with_capacity(DEFAULT_SETTINGS.tail_length),
-        },
-    ];
-
+    let mut bodies = presets::n3_one_large();
     let mut state = MainState {
         next_tail_update: 0.0,
         show_forces: false,
@@ -89,8 +64,16 @@ fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N], m_red: f32) -> [V
     let bodies = bodies.iter();
 
     for (i, other) in bodies.filter(|&b| b != body).enumerate() {
-        // F_n = (r_n - r_1) m_red
-        all_forces[i] = (other.pos - body.pos) * m_red
+        // F_(1, 2) = - G [ (m_1 m_2) / |r_1 - r_2|^3 ] (r_1 - r_2)
+        //
+        // G is taken care of later, this loop only calculates the forces depending on
+        // the particular bodies that interact
+        //
+        let (m_1, m_2) = (body.mass, other.mass);
+        let (r_1, r_2) = (body.pos, other.pos);
+        let r_21 = r_1 - r_2;
+        let d = r_21.length();
+        all_forces[i] = -m_1 * m_2 / d.powi(3) * r_21;
     }
     all_forces
 }
@@ -99,15 +82,4 @@ fn get_mass_reduced(bodies: impl Iterator<Item = &Body> + Clone) -> f32 {
     // Reduced mass
     let masses = bodies.clone().map(|x| x.mass);
     masses.clone().product::<f32>() / masses.sum::<f32>() // m_red = (m_1 m_2 .. m_n) / (m_1 + m_2 + .. + m_n)
-}
-
-fn draw_bodies(bodies: &[Body]) {
-    for c in bodies.into_iter() {
-        let step = 1.0 / c.trace.len() as f32;
-
-        draw_circle(c.pos.x, c.pos.y, c.mass, c.color);
-        for (i, pt) in c.trace.iter().enumerate() {
-            draw_circle(pt.x, pt.y, 2.0, c.color.with_alpha(i as f32 * step));
-        }
-    }
 }

@@ -1,3 +1,5 @@
+use macroquad::shapes::draw_circle;
+
 use crate::{
     body::Body,
     consts::{FORCE_ARROW_TIP_ANGLE, FORCE_ARROW_TIP_SIZE, FORCE_ARROW_WIDTH},
@@ -30,5 +32,16 @@ where
             FORCE_ARROW_TIP_SIZE,
             FORCE_ARROW_TIP_ANGLE,
         );
+    }
+}
+
+pub fn draw_bodies(bodies: &[Body]) {
+    for c in bodies.into_iter() {
+        let step = 1.0 / c.trace.len() as f32;
+
+        draw_circle(c.pos.x, c.pos.y, c.mass, c.color);
+        for (i, pt) in c.trace.iter().enumerate() {
+            draw_circle(pt.x, pt.y, 2.0, c.color.with_alpha(i as f32 * step));
+        }
     }
 }
