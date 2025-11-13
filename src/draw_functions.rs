@@ -21,13 +21,14 @@ pub fn draw_forces<const N: usize>(bodies: &[Body; N], settings: &Settings)
 where
     [(); N - 1]:,
 {
+    let avg_mass = bodies.iter().map(|b| b.mass).sum::<f32>() / N as f32;
     for b in bodies.iter() {
         let other_colors = bodies.iter().filter(|&o| o != b).map(|o| o.color);
         draw_arrows(
             get_forces(b, bodies)
                 .into_iter()
                 .zip(other_colors) // Use colors from the target
-                .map(|(f, c)| (b.pos, f / b.mass * settings.gravitational_constant, c)),
+                .map(|(f, c)| (b.pos, f / avg_mass * settings.gravitational_constant, c)),
             1.0,
             FORCE_ARROW_TIP_SIZE_REL,
             FORCE_ARROW_TIP_ANGLE,

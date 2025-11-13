@@ -2,7 +2,7 @@
 #![feature(anonymous_lifetime_in_impl_trait)]
 #![allow(incomplete_features)]
 
-use macroquad::{prelude::*, ui::root_ui};
+use macroquad::{miniquad::window::screen_size, prelude::*};
 
 use body::Body;
 use consts::DEFAULT_SETTINGS;
@@ -10,6 +10,7 @@ use consts::DEFAULT_SETTINGS;
 use crate::{
     draw_functions::{draw_bodies, draw_forces, draw_velocities},
     main_state::MainState,
+    ui::{ButtonDrawOptions, button, parameters_panel},
     update_logic::{update_bodies, update_tails},
 };
 
@@ -20,26 +21,39 @@ mod draw_primitives;
 mod main_state;
 mod presets;
 mod settings;
+mod ui;
 mod update_logic;
 
-#[macroquad::main("n-Body-Problem Simulation")]
+fn cfg() -> Conf {
+    Conf {
+        window_title: "N-Body-System Simulator".to_string(),
+        fullscreen: true,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(cfg)]
 async fn main() {
     let mut bodies = presets::n3_one_large();
-    let mut state = MainState {
-        next_tail_update: 0.0,
-        show_forces: false,
-    };
-    let settings = DEFAULT_SETTINGS;
+    let mut state = MainState::default();
+    let mut settings = DEFAULT_SETTINGS;
 
     // Tweak initial settings
     loop {
         draw_bodies(&bodies);
-        draw_forces(&bodies, &settings);
         draw_velocities(&bodies);
+        if state.show_forces {
+            draw_forces(&bodies, &settings);
+        }
 
-        if root_ui().button(vec2(10.0, 10.0), "Start".to_owned()) {
+        if button(
+            "Start Simulation",
+            vec2(100.0, 100.0),
+            ButtonDrawOptions::default(),
+        ) {
             break;
         }
+        parameters_panel(&mut settings, &mut state);
 
         next_frame().await;
     }
@@ -48,6 +62,8 @@ async fn main() {
     loop {
         update_bodies(&mut bodies, &settings);
         update_tails(&mut bodies, &settings, &mut state);
+
+        parameters_panel(&mut settings, &mut state);
 
         draw_bodies(&bodies);
         if state.show_forces {
