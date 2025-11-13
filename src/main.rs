@@ -5,37 +5,22 @@ use std::collections::VecDeque;
 
 use macroquad::{prelude::*, ui::root_ui};
 
-#[derive(Clone, PartialEq)]
-pub struct Body {
-    pos: Vec2,
-    mass: f32,
-    color: Color,
-    vel: Vec2,
-    acc: Vec2,
-    trace: VecDeque<Vec2>,
-}
+use body::Body;
+use consts::DEFAULT_SETTINGS;
 
-pub struct MainState {
-    next_tail_update: f64,
-}
-
-pub struct Settings {
-    gravitational_constant: f32,
-    time_scale: f32,
-    tail_length: usize,
-    tail_delta_ms: f64,
-}
-
-const FORCE_ARROW_WIDTH: f32 = 3.0;
-const FORCE_ARROW_TIP_ANGLE: f32 = 30_f32.to_radians();
-const FORCE_ARROW_TIP_SIZE: f32 = 30.0;
-
-const DEFAULT_SETTINGS: Settings = Settings {
-    gravitational_constant: 1e1,
-    time_scale: 1.0,
-    tail_delta_ms: 1e-6,
-    tail_length: 200,
+use crate::{
+    draw_functions::{draw_forces, draw_velocities},
+    main_state::MainState,
+    update_logic::{update_bodies, update_tails},
 };
+
+mod body;
+mod consts;
+mod draw_functions;
+mod draw_primitives;
+mod main_state;
+mod settings;
+mod update_logic;
 
 #[macroquad::main("n-Body-Problem Simulation")]
 async fn main() {
@@ -68,6 +53,7 @@ async fn main() {
 
     let mut state = MainState {
         next_tail_update: 0.0,
+        show_forces: false,
     };
     let settings = DEFAULT_SETTINGS;
 
@@ -88,33 +74,13 @@ async fn main() {
     loop {
         update_bodies(&mut bodies, &settings);
         update_tails(&mut bodies, &settings, &mut state);
+
         draw_bodies(&bodies);
+        if state.show_forces {
+            draw_forces(&bodies);
+        }
 
         next_frame().await
-    }
-}
-
-fn draw_velocities(bodies: &[Body]) {
-    draw_arrows(
-        bodies.iter().map(|b| (b.pos, b.vel, b.color)),
-        FORCE_ARROW_WIDTH,
-    );
-}
-
-fn draw_forces<const N: usize>(bodies: &[Body; N])
-where
-    [(); N - 1]:,
-{
-    let mass_reduced = get_mass_reduced(bodies.iter());
-    for b in bodies.iter() {
-        let other_colors = bodies.iter().filter(|&o| o != b).map(|o| o.color);
-        draw_arrows(
-            get_forces(b, bodies, mass_reduced)
-                .into_iter()
-                .zip(other_colors) // Use colors from the target
-                .map(|(f, c)| (b.pos, f * 1e-2, c)),
-            1.0,
-        );
     }
 }
 
@@ -133,64 +99,6 @@ fn get_mass_reduced(bodies: impl Iterator<Item = &Body> + Clone) -> f32 {
     // Reduced mass
     let masses = bodies.clone().map(|x| x.mass);
     masses.clone().product::<f32>() / masses.sum::<f32>() // m_red = (m_1 m_2 .. m_n) / (m_1 + m_2 + .. + m_n)
-}
-
-fn update_bodies<const N: usize>(bodies: &mut [Body; N], settings: &Settings)
-where
-    [(); N - 1]:,
-{
-    let dt = get_frame_time();
-
-    let bodies_iter = bodies.iter();
-    let m_red = get_mass_reduced(bodies_iter.clone());
-
-    // Sum up all forces per body
-    let mut forces = [Vec2::ZERO; N];
-    for (cur_i, cur_b) in bodies_iter.enumerate() {
-        // Sum all forces
-        let f_tot = get_forces(&cur_b, &bodies, m_red).iter().sum::<Vec2>(); // F_tot = sum F_n
-        forces[cur_i] = f_tot;
-    }
-
-    // Apply F_tot to each body
-    for (b, f_tot) in bodies.iter_mut().zip(forces) {
-        // Calculate effect on acceleration
-        let acc = (f_tot / b.mass) * settings.gravitational_constant;
-
-        // Update acceleration, velocity and position accordingly
-        b.acc = acc * dt * settings.time_scale;
-        b.vel += b.acc * dt;
-        b.pos += b.vel * dt;
-    }
-}
-
-fn update_tails(bodies: &mut [Body], settings: &Settings, state: &mut MainState) {
-    // Tail
-    if get_time() >= state.next_tail_update {
-        for c in bodies.iter_mut() {
-            update_tail(c, &settings);
-            state.next_tail_update = get_time() + settings.tail_delta_ms;
-        }
-    }
-}
-
-fn update_tail(c: &mut Body, settings: &Settings) {
-    if c.trace.len() > settings.tail_length {
-        c.trace.pop_front();
-    }
-    c.trace.push_back(c.pos);
-}
-
-fn draw_arrows(data: impl IntoIterator<Item = (Vec2, Vec2, Color)>, width: f32) {
-    for (pos, vel, color) in data.into_iter() {
-        let end = pos + vel;
-        draw_line(pos.x, pos.y, end.x, end.y, width, color);
-        for angle_dev in [1.0, -1.0] {
-            let a = vel.to_angle() + FORCE_ARROW_TIP_ANGLE * angle_dev;
-            let pt = end + FORCE_ARROW_TIP_SIZE * vec2(-a.cos(), -a.sin());
-            draw_line(end.x, end.y, pt.x, pt.y, width, color);
-        }
-    }
 }
 
 fn draw_bodies(bodies: &[Body]) {
