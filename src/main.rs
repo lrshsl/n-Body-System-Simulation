@@ -55,6 +55,10 @@ async fn main() {
         }
         parameters_panel(&mut settings, &mut state);
 
+        if state.debug_mode {
+            draw_fps();
+        }
+
         next_frame().await;
     }
 
@@ -68,6 +72,9 @@ async fn main() {
         draw_bodies(&bodies, &state);
         if state.show_forces {
             draw_forces(&bodies, &settings, &state);
+        }
+        if state.debug_mode {
+            draw_fps();
         }
 
         next_frame().await

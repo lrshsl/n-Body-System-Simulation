@@ -71,13 +71,37 @@ pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {
     ) {
         state.show_force_magnitude = !state.show_force_magnitude;
     }
-
-    settings.tail_delta_ms = slider(
-        "Tail Size",
+    if button(
+        "Debug Mode",
         topleft + margin + one_button_height,
-        settings.tail_delta_ms as f32,
+        button_opts,
+    ) {
+        state.debug_mode = !state.debug_mode;
+    }
+
+    settings.tail_length = slider(
+        "Tail Size",
+        topleft + margin + 2.0 * one_button_height,
+        settings.tail_length as f32,
         0.0,
-        0.1,
+        1e4,
         SliderDrawOptions::default(),
-    ) as f64;
+    ) as usize;
+    settings.tail_delta_ms = 1.0
+        - slider(
+            "Tail Resolution",
+            topleft + margin + 3.0 * one_button_height,
+            1.0 - settings.tail_delta_ms as f32,
+            0.0,
+            1.0,
+            SliderDrawOptions::default(),
+        ) as f64;
+    settings.time_scale = slider(
+        "Time Scale",
+        topleft + margin + 4.0 * one_button_height,
+        settings.time_scale,
+        0.0,
+        10.0,
+        SliderDrawOptions::default(),
+    );
 }
