@@ -40,10 +40,10 @@ async fn main() {
 
     // Tweak initial settings
     loop {
-        draw_bodies(&bodies);
+        draw_bodies(&bodies, &state);
         draw_velocities(&bodies);
         if state.show_forces {
-            draw_forces(&bodies, &settings);
+            draw_forces(&bodies, &settings, &state);
         }
 
         if button(
@@ -65,9 +65,9 @@ async fn main() {
 
         parameters_panel(&mut settings, &mut state);
 
-        draw_bodies(&bodies);
+        draw_bodies(&bodies, &state);
         if state.show_forces {
-            draw_forces(&bodies, &settings);
+            draw_forces(&bodies, &settings, &state);
         }
 
         next_frame().await
