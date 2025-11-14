@@ -1,3 +1,4 @@
+#![feature(mut_ref)]
 #![feature(generic_const_exprs)]
 #![feature(anonymous_lifetime_in_impl_trait)]
 #![allow(incomplete_features)]
@@ -8,8 +9,9 @@ use body::Body;
 use consts::DEFAULT_SETTINGS;
 
 use crate::{
+    consts::MINIMAL_DRAG_RADIUS,
     draw_functions::{draw_bodies, draw_forces, draw_velocities},
-    main_state::MainState,
+    main_state::{DragState::*, MainState},
     ui::{ButtonDrawOptions, button, parameters_panel},
     update_logic::{update_bodies, update_tails},
 };
@@ -27,7 +29,7 @@ mod update_logic;
 fn cfg() -> Conf {
     Conf {
         window_title: "N-Body-System Simulator".to_string(),
-        fullscreen: true,
+        fullscreen: false,
         ..Default::default()
     }
 }
@@ -44,6 +46,16 @@ async fn main() {
         draw_velocities(&bodies);
         if state.show_forces {
             draw_forces(&bodies, &settings, &state);
+        }
+
+        update_initial_state(&mut bodies, &mut state);
+        if let Some(Dragging(pos, ref mut body)) = state.drag_state {
+            let b = bodies
+                .iter_mut()
+                .find(|b| *b == body)
+                .expect("No such body");
+            b.pos = pos;
+            body.pos = pos;
         }
 
         if button(
@@ -78,6 +90,30 @@ async fn main() {
         }
 
         next_frame().await
+    }
+}
+
+fn update_initial_state<const N: usize>(bodies: &mut [Body; N], state: &mut MainState) {
+    let pos: Vec2 = mouse_position().into();
+    match state.drag_state {
+        None => {
+            if is_mouse_button_pressed(MouseButton::Left) {
+                for b in bodies.iter() {
+                    let r = b.mass.max(MINIMAL_DRAG_RADIUS);
+                    if pos.distance_squared(b.pos) < r * r {
+                        state.drag_state = Some(Dragging(pos, b.clone()));
+                    }
+                }
+            }
+        }
+        Some(Start(start, ref body)) => state.drag_state = Some(Dragging(start, body.clone())),
+        Some(Dragging(ref mut start, _)) => {
+            *start = pos;
+            if is_mouse_button_released(MouseButton::Left) {
+                state.drag_state = None
+            }
+        }
+        Some(Done { start, end }) => {}
     }
 }
 

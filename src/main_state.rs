@@ -1,3 +1,14 @@
+use macroquad::math::Vec2;
+
+use crate::body::Body;
+
+#[derive(Debug, Clone)]
+pub enum DragState {
+    Start(Vec2, Body),
+    Dragging(Vec2, Body),
+    Done { start: Vec2, end: Vec2 },
+}
+
 pub struct MainState {
     pub show_parameters: bool,
     pub show_forces: bool,
@@ -5,6 +16,7 @@ pub struct MainState {
     pub show_mass: bool,
     pub show_force_magnitude: bool,
     pub debug_mode: bool,
+    pub drag_state: Option<DragState>,
 }
 
 impl Default for MainState {
@@ -16,6 +28,7 @@ impl Default for MainState {
             show_mass: true,
             show_force_magnitude: true,
             debug_mode: false,
+            drag_state: None,
         }
     }
 }

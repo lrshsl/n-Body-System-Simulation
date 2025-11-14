@@ -7,6 +7,8 @@ pub const FORCE_ARROW_TIP_SIZE_REL: f32 = 0.2;
 pub const DEFAULT_FORCE_ARROW_LENGTH: f32 = 200.0;
 pub const DEFAULT_BODY_SIZE: f32 = 30.0;
 
+pub const MINIMAL_DRAG_RADIUS: f32 = 10.0;
+
 pub const DEFAULT_SETTINGS: Settings = Settings {
     gravitational_constant: 1e7,
     time_scale: 1.0,
