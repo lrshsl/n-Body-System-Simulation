@@ -49,13 +49,21 @@ async fn main() {
         }
 
         update_initial_state(&mut bodies, &mut state);
-        if let Some(Dragging(pos, ref mut body)) = state.drag_state {
+        if let Some(DraggingBody(pos, ref mut body)) = state.drag_state {
             let b = bodies
                 .iter_mut()
                 .find(|b| *b == body)
                 .expect("No such body");
             b.pos = pos;
             body.pos = pos;
+        }
+        if let Some(DraggingForce(pos, ref mut body)) = state.drag_state {
+            let b = bodies
+                .iter_mut()
+                .find(|b| *b == body)
+                .expect("No such body");
+            b.vel = pos - b.pos;
+            body.vel = pos - b.pos;
         }
 
         if button(
@@ -101,19 +109,28 @@ fn update_initial_state<const N: usize>(bodies: &mut [Body; N], state: &mut Main
                 for b in bodies.iter() {
                     let r = b.mass.max(MINIMAL_DRAG_RADIUS);
                     if pos.distance_squared(b.pos) < r * r {
-                        state.drag_state = Some(Dragging(pos, b.clone()));
+                        state.drag_state = Some(DraggingBody(pos, b.clone()));
+                    }
+                    if pos.distance_squared(b.pos + b.vel)
+                        < MINIMAL_DRAG_RADIUS * MINIMAL_DRAG_RADIUS
+                    {
+                        state.drag_state = Some(DraggingForce(pos, b.clone()));
                     }
                 }
             }
         }
-        Some(Start(start, ref body)) => state.drag_state = Some(Dragging(start, body.clone())),
-        Some(Dragging(ref mut start, _)) => {
+        Some(DraggingBody(ref mut start, _)) => {
             *start = pos;
             if is_mouse_button_released(MouseButton::Left) {
                 state.drag_state = None
             }
         }
-        Some(Done { start, end }) => {}
+        Some(DraggingForce(ref mut start, _)) => {
+            *start = pos;
+            if is_mouse_button_released(MouseButton::Left) {
+                state.drag_state = None
+            }
+        }
     }
 }
 

@@ -4,9 +4,8 @@ use crate::body::Body;
 
 #[derive(Debug, Clone)]
 pub enum DragState {
-    Start(Vec2, Body),
-    Dragging(Vec2, Body),
-    Done { start: Vec2, end: Vec2 },
+    DraggingBody(Vec2, Body),
+    DraggingForce(Vec2, Body),
 }
 
 pub struct MainState {
