@@ -11,7 +11,10 @@ use consts::DEFAULT_SETTINGS;
 use crate::{
     consts::MINIMAL_DRAG_RADIUS,
     draw_functions::{draw_bodies, draw_forces, draw_velocities},
-    main_state::{DragState::*, MainState},
+    main_state::{
+        DragState::{self, *},
+        MainState,
+    },
     ui::{ButtonDrawOptions, button, parameters_panel},
     update_logic::{update_bodies, update_tails},
 };
@@ -29,7 +32,7 @@ mod update_logic;
 fn cfg() -> Conf {
     Conf {
         window_title: "N-Body-System Simulator".to_string(),
-        fullscreen: false,
+        fullscreen: true,
         ..Default::default()
     }
 }
@@ -48,22 +51,10 @@ async fn main() {
             draw_forces(&bodies, &settings, &state);
         }
 
-        update_initial_state(&mut bodies, &mut state);
-        if let Some(DraggingBody(pos, ref mut body)) = state.drag_state {
-            let b = bodies
-                .iter_mut()
-                .find(|b| *b == body)
-                .expect("No such body");
-            b.pos = pos;
-            body.pos = pos;
-        }
-        if let Some(DraggingForce(pos, ref mut body)) = state.drag_state {
-            let b = bodies
-                .iter_mut()
-                .find(|b| *b == body)
-                .expect("No such body");
-            b.vel = pos - b.pos;
-            body.vel = pos - b.pos;
+        if let Some(drag_state) = register_keyboard_input(&bodies, state.drag_state.clone()) {
+            state.drag_state = Some(react_on_input(&mut bodies, drag_state));
+        } else {
+            state.drag_state = None
         }
 
         if button(
@@ -101,34 +92,63 @@ async fn main() {
     }
 }
 
-fn update_initial_state<const N: usize>(bodies: &mut [Body; N], state: &mut MainState) {
+fn react_on_input(bodies: &mut [Body], new_state: DragState) -> DragState {
+    match new_state {
+        DraggingBody(pos, mut body) => {
+            let b = bodies
+                .iter_mut()
+                .find(|b| **b == body)
+                .expect("No such body");
+            b.pos = pos;
+            body.pos = pos;
+            DraggingBody(pos, body)
+        }
+        DraggingForce(pos, mut body) => {
+            let b = bodies
+                .iter_mut()
+                .find(|b| **b == body)
+                .expect("No such body");
+            b.vel = pos - b.pos;
+            body.vel = pos - b.pos;
+            DraggingForce(pos, body)
+        }
+    }
+}
+
+fn register_keyboard_input(
+    bodies: &[Body],
+    previous_drag_state: Option<DragState>,
+) -> Option<DragState> {
     let pos: Vec2 = mouse_position().into();
-    match state.drag_state {
+    match previous_drag_state {
         None => {
             if is_mouse_button_pressed(MouseButton::Left) {
                 for b in bodies.iter() {
                     let r = b.mass.max(MINIMAL_DRAG_RADIUS);
                     if pos.distance_squared(b.pos) < r * r {
-                        state.drag_state = Some(DraggingBody(pos, b.clone()));
+                        return Some(DraggingBody(pos, b.clone()));
                     }
                     if pos.distance_squared(b.pos + b.vel)
                         < MINIMAL_DRAG_RADIUS * MINIMAL_DRAG_RADIUS
                     {
-                        state.drag_state = Some(DraggingForce(pos, b.clone()));
+                        return Some(DraggingForce(pos, b.clone()));
                     }
                 }
             }
+            None
         }
-        Some(DraggingBody(ref mut start, _)) => {
-            *start = pos;
+        Some(DraggingBody(_, b)) => {
             if is_mouse_button_released(MouseButton::Left) {
-                state.drag_state = None
+                None
+            } else {
+                Some(DraggingBody(pos, b))
             }
         }
-        Some(DraggingForce(ref mut start, _)) => {
-            *start = pos;
+        Some(DraggingForce(_, b)) => {
             if is_mouse_button_released(MouseButton::Left) {
-                state.drag_state = None
+                None
+            } else {
+                Some(DraggingForce(pos, b))
             }
         }
     }
