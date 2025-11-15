@@ -39,7 +39,7 @@ fn cfg() -> Conf {
 
 #[macroquad::main(cfg)]
 async fn main() {
-    let mut bodies = presets::n3_one_large();
+    let mut bodies = presets::n2_one_large();
     let mut state = MainState::default();
     let mut settings = DEFAULT_SETTINGS;
 
