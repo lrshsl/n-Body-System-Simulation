@@ -11,3 +11,9 @@ pub struct Body {
     pub acc: Vec2,
     pub trace: VecDeque<Vec2>,
 }
+
+impl Body {
+    pub fn radius(&self) -> f32 {
+        self.mass
+    }
+}

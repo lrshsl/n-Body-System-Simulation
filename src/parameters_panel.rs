@@ -5,14 +5,14 @@ use macroquad::{
     shapes::draw_rectangle_lines,
 };
 
+use micro_ui::{
+    SliderDrawOptions,
+    ButtonDrawOptions, button,
+    slider,
+};
 use crate::{
     main_state::MainState,
     settings::Settings,
-    ui::{
-        SliderDrawOptions,
-        button::{ButtonDrawOptions, button},
-        slider,
-    },
 };
 
 pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {

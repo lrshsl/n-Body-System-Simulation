@@ -7,6 +7,7 @@ use macroquad::prelude::*;
 
 use body::Body;
 use consts::DEFAULT_SETTINGS;
+use micro_ui::{ButtonDrawOptions, button};
 
 use crate::{
     consts::MINIMAL_DRAG_RADIUS,
@@ -15,7 +16,7 @@ use crate::{
         DragState::{self, *},
         MainState,
     },
-    ui::{ButtonDrawOptions, button, parameters_panel},
+    parameters_panel::parameters_panel,
     update_logic::{update_bodies, update_tails},
 };
 
@@ -24,9 +25,9 @@ mod consts;
 mod draw_functions;
 mod draw_primitives;
 mod main_state;
+mod parameters_panel;
 mod presets;
 mod settings;
-mod ui;
 mod update_logic;
 
 fn cfg() -> Conf {
