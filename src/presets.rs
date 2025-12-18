@@ -82,6 +82,23 @@ pub const fn web_default() -> [Body; 4] {
     ]
 }
 
+pub const fn two_balanced() -> [Body; 2] {
+    [
+        body! {
+            color: GREEN,
+            pos: vec2(1000.0, 1200.0),
+            vel: vec2(0.0, -75.0),
+            mass: 50.0,
+        },
+        body! {
+            color: BLUE,
+            pos: vec2(1600.0, 1200.0),
+            vel: vec2(0.0, 75.0),
+            mass: 50.0,
+        },
+    ]
+}
+
 pub const fn n2_one_large() -> [Body; 2] {
     [
         body! {

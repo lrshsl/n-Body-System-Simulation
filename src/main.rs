@@ -40,7 +40,7 @@ fn cfg() -> Conf {
 
 #[macroquad::main(cfg)]
 async fn main() {
-    let mut bodies = presets::web_default();
+    let mut bodies = presets::two_balanced();
     let mut state = MainState::default();
     let mut settings = DEFAULT_SETTINGS;
 
