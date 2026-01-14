@@ -46,7 +46,6 @@ where
     [(); N - 1]:,
 {
     let mut state = MainState::default();
-    state.show_mass = false;
 
     // Tweak initial settings
     loop {

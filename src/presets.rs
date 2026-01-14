@@ -101,9 +101,9 @@ pub fn two_balanced() -> [Body; 2] {
 
 pub fn circular() -> [Body; 3] {
     const G: f32 = 1e7;
-    let r = 1000.0;
+    let r = 500.0;
     let m_sun = 50.0;
-    let pos_sun = vec2(1600.0, 600.0);
+    let pos_sun = vec2(800.0, 600.0);
     let pos_sat1 = pos_sun.with_x(pos_sun.x - r);
     let pos_sat2 = pos_sun.with_x(pos_sun.x + r);
     let vel_sat = (G * m_sun / r).sqrt(); // circular orbit: v = sqrt((G M) / r)
@@ -112,13 +112,13 @@ pub fn circular() -> [Body; 3] {
             color: GREEN,
             pos: pos_sat1,
             vel: vec2(0.0, vel_sat),
-            mass: 1.0,
+            mass: 5.0,
         },
         body! {
             color: BLUE,
             pos: pos_sat2,
             vel: vec2(0.0, -vel_sat),
-            mass: 1.0,
+            mass: 5.0,
         },
         body! {
             color: YELLOW,

@@ -17,7 +17,7 @@ pub fn parameters_panel(state: &mut MainState) {
         vec2(screen_size.x - margin.x - 50.0, margin.y),
         ButtonDrawOptions {
             size: vec2(50.0, 50.0),
-            border_width: 1.5,
+            border_width: 2.0,
             ..Default::default()
         },
     ) {

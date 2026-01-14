@@ -29,7 +29,7 @@ impl Default for MainState {
     fn default() -> Self {
         Self {
             show_forces: false,
-            show_parameters: true,
+            show_parameters: false,
             next_tail_update: 0.0,
             show_mass: true,
             show_force_magnitude: true,
@@ -37,7 +37,7 @@ impl Default for MainState {
             drag_state: None,
             gravitational_constant: 1e7,
             time_scale: 1.0,
-            tail_delta_ms: 1e-1,
+            tail_delta_ms: 1e-2,
             tail_length: 500,
             should_restart: false,
             should_pause: false,
