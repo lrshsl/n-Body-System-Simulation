@@ -40,9 +40,11 @@ fn cfg() -> Conf {
 
 #[macroquad::main(cfg)]
 async fn main() {
-    let mut bodies = presets::two_balanced();
+    let mut bodies = presets::circular();
     let mut state = MainState::default();
+    state.show_mass = false;
     let mut settings = DEFAULT_SETTINGS;
+    settings.time_scale = 0.1;
 
     // Tweak initial settings
     loop {
@@ -52,7 +54,8 @@ async fn main() {
             draw_forces(&bodies, &settings, &state);
         }
 
-        if let Some(drag_state) = register_keyboard_input(&bodies, state.drag_state.clone()) {
+        if let Some(drag_state) = register_keyboard_input(&state, &bodies, state.drag_state.clone())
+        {
             state.drag_state = Some(react_on_input(&mut bodies, drag_state));
         } else {
             state.drag_state = None
@@ -117,6 +120,7 @@ fn react_on_input(bodies: &mut [Body], new_state: DragState) -> DragState {
 }
 
 fn register_keyboard_input(
+    state: &MainState,
     bodies: &[Body],
     previous_drag_state: Option<DragState>,
 ) -> Option<DragState> {
@@ -125,7 +129,11 @@ fn register_keyboard_input(
         None => {
             if is_mouse_button_pressed(MouseButton::Left) {
                 for b in bodies.iter() {
-                    let r = b.mass.max(MINIMAL_DRAG_RADIUS);
+                    let r = if state.show_mass {
+                        b.mass.max(MINIMAL_DRAG_RADIUS)
+                    } else {
+                        MINIMAL_DRAG_RADIUS
+                    };
                     if pos.distance_squared(b.pos) < r * r {
                         return Some(DraggingBody(pos, b.clone()));
                     }

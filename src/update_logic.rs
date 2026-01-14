@@ -15,21 +15,23 @@ where
 
     // Sum up all forces per body
     let mut forces = [Vec2::ZERO; N];
-    for (cur_i, cur_b) in bodies_iter.clone().enumerate() {
-        // Sum all forces
-        let f_tot = get_forces(&cur_b, bodies).iter().sum::<Vec2>(); // F_tot = sum F_n
-        forces[cur_i] = f_tot;
+    for (i, b) in bodies_iter.clone().enumerate() {
+        // Sum all forces F_tot = sum F_n
+        let f_tot_non_scaled = get_forces(&b, bodies).iter().sum::<Vec2>();
+
+        // Apply G only once
+        forces[i] = f_tot_non_scaled * settings.gravitational_constant;
     }
 
     // Apply F_tot to each body
+    let time_step = dt * settings.time_scale;
     for (b, f_tot) in bodies.iter_mut().zip(forces) {
-        // Calculate effect on acceleration
-        let acc = (f_tot / b.mass) * settings.gravitational_constant;
+        // Calculate new acceleration
+        b.acc = f_tot / b.mass;
 
         // Update acceleration, velocity and position accordingly
-        b.acc = acc * dt * settings.time_scale;
-        b.vel += b.acc * dt;
-        b.pos += b.vel * dt;
+        b.vel += b.acc * time_step;
+        b.pos += b.vel * time_step;
     }
 
     // Collisions
@@ -50,10 +52,28 @@ where
     }
 }
 
+fn get_f_tot<const N: usize>(body: &Body, bodies: &[Body; N], g: f32) -> Vec2 {
+    let mut f_tot = Vec2::ZERO;
+    let bodies = bodies.iter();
+
+    for other in bodies.filter(|&b| b != body) {
+        // F_(1, 2) = - G [ (m_1 m_2) / |r_1 - r_2|^3 ] (r_1 - r_2)
+        //
+        let (m_1, m_2) = (body.mass, other.mass);
+        let (p_1, p_2) = (body.pos, other.pos);
+
+        let pos_diff = p_1 - p_2;
+        let d = pos_diff.length();
+
+        f_tot += -m_1 * m_2 / d.powi(3) * pos_diff;
+    }
+    f_tot
+}
+
 fn handle_collision(a: &mut Body, b: &mut Body, time_scale: f32) {
-    let d2 = a.pos.distance_squared(b.pos);
-    let r2 = (a.radius() + b.radius()) * (a.radius() + b.radius());
-    if d2 <= r2 {
+    let d_squared = a.pos.distance_squared(b.pos);
+    let r_squared = (a.radius() + b.radius()) * (a.radius() + b.radius());
+    if d_squared <= r_squared {
         // Step back
         a.pos -= a.vel * time_scale;
 
