@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 macroquad = "0.4.14"
 micro-ui = { path = "../../micro-ui" }
+rayon = "1.11.0"
 
 # Always optimize dependencies (recommended for macroquad)
 [profile.dev.package.'*']

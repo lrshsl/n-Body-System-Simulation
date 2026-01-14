@@ -5,7 +5,7 @@ use macroquad::{
     math::{Vec2, vec2},
 };
 
-use crate::{body::Body, consts::DEFAULT_SETTINGS};
+use crate::body::Body;
 
 macro_rules! body {
     (
@@ -99,18 +99,25 @@ pub fn two_balanced() -> [Body; 2] {
     ]
 }
 
-pub fn circular() -> [Body; 2] {
+pub fn circular() -> [Body; 3] {
     const G: f32 = 1e7;
     let r = 1000.0;
-    let m_sun = 1e2;
+    let m_sun = 50.0;
     let pos_sun = vec2(1600.0, 600.0);
-    let pos_sat = pos_sun.with_x(pos_sun.x - r);
+    let pos_sat1 = pos_sun.with_x(pos_sun.x - r);
+    let pos_sat2 = pos_sun.with_x(pos_sun.x + r);
     let vel_sat = (G * m_sun / r).sqrt(); // circular orbit: v = sqrt((G M) / r)
     [
         body! {
             color: GREEN,
-            pos: pos_sat,
+            pos: pos_sat1,
             vel: vec2(0.0, vel_sat),
+            mass: 1.0,
+        },
+        body! {
+            color: BLUE,
+            pos: pos_sat2,
+            vel: vec2(0.0, -vel_sat),
             mass: 1.0,
         },
         body! {

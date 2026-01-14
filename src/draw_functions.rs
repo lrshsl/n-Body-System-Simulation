@@ -9,7 +9,6 @@ use crate::{
     draw_primitives::arrow::draw_arrows,
     get_forces,
     main_state::MainState,
-    settings::Settings,
 };
 
 pub fn draw_velocities(bodies: &[Body]) {
@@ -21,7 +20,7 @@ pub fn draw_velocities(bodies: &[Body]) {
     );
 }
 
-pub fn draw_forces<const N: usize>(bodies: &[Body; N], settings: &Settings, state: &MainState)
+pub fn draw_forces<const N: usize>(bodies: &[Body; N], state: &MainState)
 where
     [(); N - 1]:,
 {
@@ -36,7 +35,7 @@ where
                     (
                         b.pos,
                         if state.show_force_magnitude {
-                            f / avg_mass * settings.gravitational_constant
+                            f / avg_mass * state.gravitational_constant
                         } else {
                             f.normalize() * DEFAULT_FORCE_ARROW_LENGTH
                         },

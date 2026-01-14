@@ -5,17 +5,10 @@ use macroquad::{
     shapes::draw_rectangle_lines,
 };
 
-use micro_ui::{
-    SliderDrawOptions,
-    ButtonDrawOptions, button,
-    slider,
-};
-use crate::{
-    main_state::MainState,
-    settings::Settings,
-};
+use crate::main_state::MainState;
+use micro_ui::{ButtonDrawOptions, SliderDrawOptions, button, slider};
 
-pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {
+pub fn parameters_panel(state: &mut MainState) {
     let screen_size: Vec2 = screen_size().into();
     let margin = vec2(0.01, 0.01) * screen_size;
 
@@ -71,35 +64,45 @@ pub fn parameters_panel(settings: &mut Settings, state: &mut MainState) {
     ) {
         state.show_force_magnitude = !state.show_force_magnitude;
     }
+    if button("Pause", topleft + margin + one_button_height, button_opts) {
+        state.should_pause = !state.should_pause;
+    }
+    if button(
+        "Restart",
+        topleft + margin + one_button_height + one_button_width,
+        button_opts,
+    ) {
+        state.should_restart = true;
+    }
     if button(
         "Debug Mode",
-        topleft + margin + one_button_height,
+        topleft + margin + one_button_height + 2.0 * one_button_width,
         button_opts,
     ) {
         state.debug_mode = !state.debug_mode;
     }
 
-    settings.tail_length = slider(
+    state.tail_length = slider(
         "Tail Size",
         topleft + margin + 2.0 * one_button_height,
-        settings.tail_length as f32,
+        state.tail_length as f32,
         0.0,
         1e4,
         SliderDrawOptions::default(),
     ) as usize;
-    settings.tail_delta_ms = 1.0
+    state.tail_delta_ms = 1.0
         - slider(
             "Tail Resolution",
             topleft + margin + 3.0 * one_button_height,
-            1.0 - settings.tail_delta_ms as f32,
+            1.0 - state.tail_delta_ms as f32,
             0.0,
             1.0,
             SliderDrawOptions::default(),
         ) as f64;
-    settings.time_scale = slider(
+    state.time_scale = slider(
         "Time Scale",
         topleft + margin + 4.0 * one_button_height,
-        settings.time_scale,
+        state.time_scale,
         0.0,
         10.0,
         SliderDrawOptions::default(),

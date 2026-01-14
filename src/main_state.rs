@@ -16,6 +16,13 @@ pub struct MainState {
     pub show_force_magnitude: bool,
     pub debug_mode: bool,
     pub drag_state: Option<DragState>,
+
+    pub gravitational_constant: f32,
+    pub time_scale: f32,
+    pub tail_length: usize,
+    pub tail_delta_ms: f64,
+    pub should_restart: bool,
+    pub should_pause: bool,
 }
 
 impl Default for MainState {
@@ -28,6 +35,12 @@ impl Default for MainState {
             show_force_magnitude: true,
             debug_mode: false,
             drag_state: None,
+            gravitational_constant: 1e7,
+            time_scale: 1.0,
+            tail_delta_ms: 1e-1,
+            tail_length: 500,
+            should_restart: false,
+            should_pause: false,
         }
     }
 }

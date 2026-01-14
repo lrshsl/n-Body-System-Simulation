@@ -6,7 +6,6 @@
 use macroquad::prelude::*;
 
 use body::Body;
-use consts::DEFAULT_SETTINGS;
 use micro_ui::{ButtonDrawOptions, button};
 
 use crate::{
@@ -27,7 +26,6 @@ mod draw_primitives;
 mod main_state;
 mod parameters_panel;
 mod presets;
-mod settings;
 mod update_logic;
 
 fn cfg() -> Conf {
@@ -40,18 +38,22 @@ fn cfg() -> Conf {
 
 #[macroquad::main(cfg)]
 async fn main() {
-    let mut bodies = presets::circular();
+    start_all(presets::circular()).await;
+}
+
+async fn start_all<const N: usize>(mut bodies: [Body; N]) -> !
+where
+    [(); N - 1]:,
+{
     let mut state = MainState::default();
     state.show_mass = false;
-    let mut settings = DEFAULT_SETTINGS;
-    settings.time_scale = 0.1;
 
     // Tweak initial settings
     loop {
         draw_bodies(&bodies, &state);
         draw_velocities(&bodies);
         if state.show_forces {
-            draw_forces(&bodies, &settings, &state);
+            draw_forces(&bodies, &state);
         }
 
         if let Some(drag_state) = register_keyboard_input(&state, &bodies, state.drag_state.clone())
@@ -68,7 +70,7 @@ async fn main() {
         ) {
             break;
         }
-        parameters_panel(&mut settings, &mut state);
+        parameters_panel(&mut state);
 
         if state.debug_mode {
             draw_fps();
@@ -77,16 +79,33 @@ async fn main() {
         next_frame().await;
     }
 
-    // Simulation loop
-    loop {
-        update_bodies(&mut bodies, &settings);
-        update_tails(&mut bodies, &settings, &mut state);
+    simulation_loop(bodies, state).await
+}
 
-        parameters_panel(&mut settings, &mut state);
+async fn simulation_loop<const N: usize>(mut bodies: [Body; N], mut state: MainState) -> !
+where
+    [(); N - 1]:,
+{
+    loop {
+        update_bodies(&mut bodies, &state);
+        update_tails(&mut bodies, &mut state);
+
+        parameters_panel(&mut state);
+        if state.should_pause {
+            Box::pin(start_all(bodies)).await;
+        }
+        if state.should_restart {
+            let preset = presets::circular();
+            assert_eq!(preset.len(), N);
+            for (body, p_body) in bodies.iter_mut().zip(preset.into_iter()) {
+                *body = p_body;
+            }
+            Box::pin(start_all(bodies)).await;
+        }
 
         draw_bodies(&bodies, &state);
         if state.show_forces {
-            draw_forces(&bodies, &settings, &state);
+            draw_forces(&bodies, &state);
         }
         if state.debug_mode {
             draw_fps();
