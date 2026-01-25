@@ -102,9 +102,9 @@ pub fn parameters_panel(state: &mut MainState) {
     state.time_scale = slider(
         "Time Scale",
         topleft + margin + 4.0 * one_button_height,
-        state.time_scale,
+        state.time_scale as f32,
         0.0,
         10.0,
         SliderDrawOptions::default(),
-    );
+    ) as f64;
 }

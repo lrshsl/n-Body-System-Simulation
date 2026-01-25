@@ -1,4 +1,4 @@
-use macroquad::{color::Color, math::Vec2, shapes::draw_circle};
+use macroquad::{color::Color, math::DVec2, shapes::draw_circle};
 
 use crate::{
     body::Body,
@@ -24,14 +24,14 @@ pub fn draw_forces<const N: usize>(bodies: &[Body; N], state: &MainState)
 where
     [(); N - 1]:,
 {
-    let avg_mass = bodies.iter().map(|b| b.mass).sum::<f32>() / N as f32;
+    let avg_mass = bodies.iter().map(|b| b.mass).sum::<f64>() / N as f64;
     for b in bodies.iter() {
         let other_colors = bodies.iter().filter(|&o| o != b).map(|o| o.color);
         draw_arrows(
             get_forces(b, bodies)
                 .into_iter()
                 .zip(other_colors) // Use colors from the target
-                .map(|(f, c): (Vec2, Color)| {
+                .map(|(f, c): (DVec2, Color)| {
                     (
                         b.pos,
                         if state.show_force_magnitude {
@@ -58,9 +58,14 @@ pub fn draw_bodies(bodies: &[Body], state: &MainState) {
             DEFAULT_BODY_SIZE
         };
 
-        draw_circle(c.pos.x, c.pos.y, radius, c.color);
+        draw_circle(c.pos.x as f32, c.pos.y as f32, radius as f32, c.color);
         for (i, pt) in c.trace.iter().enumerate() {
-            draw_circle(pt.x, pt.y, 2.0, c.color.with_alpha(i as f32 * step));
+            draw_circle(
+                pt.x as f32,
+                pt.y as f32,
+                2.0,
+                c.color.with_alpha(i as f32 * step),
+            );
         }
     }
 }

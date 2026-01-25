@@ -1,11 +1,11 @@
-use macroquad::math::Vec2;
+use macroquad::math::DVec2;
 
 use crate::body::Body;
 
 #[derive(Debug, Clone)]
 pub enum DragState {
-    DraggingBody(Vec2, Body),
-    DraggingForce(Vec2, Body),
+    DraggingBody(DVec2, Body),
+    DraggingForce(DVec2, Body),
 }
 
 pub struct MainState {
@@ -17,8 +17,8 @@ pub struct MainState {
     pub debug_mode: bool,
     pub drag_state: Option<DragState>,
 
-    pub gravitational_constant: f32,
-    pub time_scale: f32,
+    pub gravitational_constant: f64,
+    pub time_scale: f64,
     pub tail_length: usize,
     pub tail_delta_ms: f64,
     pub should_restart: bool,

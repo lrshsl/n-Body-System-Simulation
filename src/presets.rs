@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use macroquad::{
     color::{BLUE, DARKGREEN, GREEN, PURPLE, YELLOW},
-    math::{Vec2, vec2},
+    math::{DVec2, dvec2},
 };
 
 use crate::body::Body;
@@ -36,7 +36,7 @@ macro_rules! body {
             mass: $mass,
             color: $clr,
             vel: $vel,
-            acc: Vec2::ZERO,
+            acc: DVec2::ZERO,
             trace: VecDeque::new(),
         }
     };
@@ -50,7 +50,7 @@ macro_rules! body {
             mass: 10.0,
             color: $clr,
             vel: $vel,
-            acc: Vec2::ZERO,
+            acc: DVec2::ZERO,
             trace: VecDeque::new(),
         }
     };
@@ -60,24 +60,24 @@ pub fn web_default() -> [Body; 4] {
     [
         body! {
             color: PURPLE,
-            pos: vec2(1200.0, 500.0),
-            vel: vec2(-60.0, -10.0),
+            pos: dvec2(1200.0, 500.0),
+            vel: dvec2(-60.0, -10.0),
             mass: 40.0,
         },
         body! {
             color: GREEN,
-            pos: vec2(600.0, 100.0),
-            vel: vec2(40.0, -30.0),
+            pos: dvec2(600.0, 100.0),
+            vel: dvec2(40.0, -30.0),
         },
         body! {
             color: BLUE,
-            pos: vec2(300.0, 800.0),
-            vel: vec2(20.0, 0.0),
+            pos: dvec2(300.0, 800.0),
+            vel: dvec2(20.0, 0.0),
         },
         body! {
             color: DARKGREEN,
-            pos: vec2(600.0, 1000.0),
-            vel: vec2(30.0, -30.0),
+            pos: dvec2(600.0, 1000.0),
+            vel: dvec2(30.0, -30.0),
         },
     ]
 }
@@ -86,24 +86,24 @@ pub fn two_balanced() -> [Body; 2] {
     [
         body! {
             color: GREEN,
-            pos: vec2(1000.0, 1200.0),
-            vel: vec2(0.0, -75.0),
+            pos: dvec2(1000.0, 1200.0),
+            vel: dvec2(0.0, -75.0),
             mass: 50.0,
         },
         body! {
             color: BLUE,
-            pos: vec2(1600.0, 1200.0),
-            vel: vec2(0.0, 75.0),
+            pos: dvec2(1600.0, 1200.0),
+            vel: dvec2(0.0, 75.0),
             mass: 50.0,
         },
     ]
 }
 
 pub fn circular() -> [Body; 3] {
-    const G: f32 = 1e7;
+    const G: f64 = 1e7;
     let r = 500.0;
-    let m_sun = 50.0;
-    let pos_sun = vec2(800.0, 600.0);
+    let m_sun = 5000.0;
+    let pos_sun = dvec2(800.0, 600.0);
     let pos_sat1 = pos_sun.with_x(pos_sun.x - r);
     let pos_sat2 = pos_sun.with_x(pos_sun.x + r);
     let vel_sat = (G * m_sun / r).sqrt(); // circular orbit: v = sqrt((G M) / r)
@@ -111,19 +111,19 @@ pub fn circular() -> [Body; 3] {
         body! {
             color: GREEN,
             pos: pos_sat1,
-            vel: vec2(0.0, vel_sat),
+            vel: dvec2(0.0, vel_sat),
             mass: 5.0,
         },
         body! {
             color: BLUE,
             pos: pos_sat2,
-            vel: vec2(0.0, -vel_sat),
+            vel: dvec2(0.0, -vel_sat),
             mass: 5.0,
         },
         body! {
             color: YELLOW,
             pos: pos_sun,
-            vel: Vec2::ZERO,
+            vel: DVec2::ZERO,
             mass: m_sun,
         },
     ]
@@ -133,14 +133,14 @@ pub fn n2_one_large() -> [Body; 2] {
     [
         body! {
             color: GREEN,
-            pos: vec2(600.0, 100.0),
-            vel: vec2(120.0, -50.0),
+            pos: dvec2(600.0, 100.0),
+            vel: dvec2(120.0, -50.0),
             mass: 5.0,
         },
         body! {
             color: YELLOW,
-            pos: vec2(1600.0, 1000.0),
-            vel: Vec2::ZERO,
+            pos: dvec2(1600.0, 1000.0),
+            vel: DVec2::ZERO,
             mass: 5.0 * 50.0,
         },
     ]
@@ -150,20 +150,20 @@ pub fn n3_one_large() -> [Body; 3] {
     [
         body! {
             color: GREEN,
-            pos: vec2(600.0, 100.0),
-            vel: vec2(120.0, -50.0),
+            pos: dvec2(600.0, 100.0),
+            vel: dvec2(120.0, -50.0),
             mass: 5.0,
         },
         body! {
             color: YELLOW,
-            pos: vec2(1600.0, 1000.0),
-            vel: Vec2::ZERO,
+            pos: dvec2(1600.0, 1000.0),
+            vel: DVec2::ZERO,
             mass: 5.0 * 50.0,
         },
         body! {
             color: BLUE,
-            pos: vec2(1000.0, 1550.0),
-            vel: vec2(-161.0, -100.0),
+            pos: dvec2(1000.0, 1550.0),
+            vel: dvec2(-161.0, -100.0),
             mass: 5.0,
         },
     ]

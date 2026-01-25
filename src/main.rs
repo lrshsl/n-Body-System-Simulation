@@ -46,6 +46,8 @@ where
     [(); N - 1]:,
 {
     let mut state = MainState::default();
+    state.show_mass = false;
+    state.time_scale = 0.1;
 
     // Tweak initial settings
     loop {
@@ -143,6 +145,7 @@ fn register_keyboard_input(
     previous_drag_state: Option<DragState>,
 ) -> Option<DragState> {
     let pos: Vec2 = mouse_position().into();
+    let pos = pos.as_dvec2();
     match previous_drag_state {
         None => {
             if is_mouse_button_pressed(MouseButton::Left) {
@@ -181,8 +184,8 @@ fn register_keyboard_input(
     }
 }
 
-fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N]) -> [Vec2; N - 1] {
-    let mut all_forces = [Vec2::new(0.0, 0.0); N - 1];
+fn get_forces<const N: usize>(body: &Body, bodies: &[Body; N]) -> [DVec2; N - 1] {
+    let mut all_forces = [DVec2::new(0.0, 0.0); N - 1];
     let bodies = bodies.iter();
 
     for (i, other) in bodies.filter(|&b| b != body).enumerate() {

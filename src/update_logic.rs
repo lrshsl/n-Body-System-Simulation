@@ -1,16 +1,16 @@
 use macroquad::{
-    math::Vec2,
+    math::DVec2,
     time::{get_frame_time, get_time},
 };
 
 use crate::{Body, consts::MINIMAL_DRAG_RADIUS, main_state::MainState};
 
 pub fn update_bodies<const N: usize>(bodies: &mut [Body; N], state: &MainState) {
-    let dt = get_frame_time();
+    let dt = get_frame_time() as f64;
     let bodies_iter = bodies.clone().into_iter();
 
     // Sum up all forces per body
-    let mut forces = [Vec2::ZERO; N];
+    let mut forces = [DVec2::ZERO; N];
     for (i, b) in bodies_iter.clone().enumerate() {
         // Sum all forces F_tot = sum F_n
         forces[i] = get_f_tot(&b, bodies, state.gravitational_constant);
@@ -45,8 +45,8 @@ pub fn update_bodies<const N: usize>(bodies: &mut [Body; N], state: &MainState) 
     }
 }
 
-fn get_f_tot<const N: usize>(body: &Body, bodies: &[Body; N], g: f32) -> Vec2 {
-    let mut f_tot = Vec2::ZERO;
+fn get_f_tot<const N: usize>(body: &Body, bodies: &[Body; N], g: f64) -> DVec2 {
+    let mut f_tot = DVec2::ZERO;
     let bodies = bodies.iter();
 
     for other in bodies.filter(|&b| b != body) {
@@ -63,7 +63,7 @@ fn get_f_tot<const N: usize>(body: &Body, bodies: &[Body; N], g: f32) -> Vec2 {
     f_tot * g
 }
 
-fn handle_collision(a: &mut Body, b: &mut Body, time_scale: f32, use_mass: bool) {
+fn handle_collision(a: &mut Body, b: &mut Body, time_scale: f64, use_mass: bool) {
     let d_squared = a.pos.distance_squared(b.pos);
     let r_squared = if use_mass {
         (a.radius() + b.radius()) * (a.radius() + b.radius())
@@ -77,8 +77,8 @@ fn handle_collision(a: &mut Body, b: &mut Body, time_scale: f32, use_mass: bool)
         let d = b.pos - a.pos;
         let angle_a = a.vel.angle_between(d);
         let angle_b = b.vel.angle_between(d);
-        a.vel = -Vec2::from_angle(2.0 * angle_a).rotate(a.vel);
-        b.vel = -Vec2::from_angle(2.0 * angle_b).rotate(b.vel);
+        a.vel = -DVec2::from_angle(2.0 * angle_a).rotate(a.vel);
+        b.vel = -DVec2::from_angle(2.0 * angle_b).rotate(b.vel);
     }
 }
 
